@@ -63,6 +63,7 @@ public class NumberGuesserHW {
 		} else {
 			System.out.println("That's wrong");
 			strikes++;
+			saveLevel();
 			if (strikes >= maxStrikes) {
 				lose();
 			} else {
@@ -91,6 +92,8 @@ public class NumberGuesserHW {
 	private void saveLevel() {
 		try (FileWriter fw = new FileWriter(saveFile)) {
 			fw.write("" + level);// here we need to convert it to a String to record correctly
+			fw.write(" " + strikes);
+			fw.write(" " + number);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -103,13 +106,18 @@ public class NumberGuesserHW {
 			return false;
 		}
 		try (Scanner reader = new Scanner(file)) {
-			while (reader.hasNextLine()) {
 				int _level = reader.nextInt();
 				if (_level > 1) {
 					level = _level;
-					break;
 				}
-			}
+				int _strikes = reader.nextInt();
+				if (_strikes > 0) {
+					strikes = _strikes;
+				}
+				int _number = reader.nextInt();
+				if (_number > 0) {
+					number = _number;
+				}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			return false;
@@ -127,6 +135,9 @@ public class NumberGuesserHW {
 					+ " attempts to guess.");
 			if (loadLevel()) {
 				System.out.println("Successfully loaded level " + level + " let's continue then");
+				int remainder = maxStrikes - strikes;
+				System.out.println("Successfully loaded strikes. You have " + remainder +  " attempts remaining");
+				System.out.println("Successfully loaded the secret number");
 			}
 			number = getNumber(level);
 			isRunning = true;
