@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Random;
 
 public class Room implements AutoCloseable {
     private static SocketServer server;// used to refer to accessible server functions
@@ -15,6 +16,8 @@ public class Room implements AutoCloseable {
     private final static String COMMAND_TRIGGER = "/";
     private final static String CREATE_ROOM = "createroom";
     private final static String JOIN_ROOM = "joinroom";
+    private final static String ROLL = "roll";
+    private final static String FLIP = "flip";
 
     public Room(String name) {
 	this.name = name;
@@ -122,6 +125,26 @@ public class Room implements AutoCloseable {
 		    joinRoom(roomName, client);
 		    wasCommand = true;
 		    break;
+		case ROLL:
+			Random randRoll = new Random(); 
+			int rollMax = Integer.parseInt(comm2[1]);
+			int rollResult = randRoll.nextInt(rollMax);
+			String rollResult2 = Integer.toString(rollResult);
+			sendMessage(client, "rolled " + rollResult2);
+			break;
+		case FLIP:
+			Random randFlip = new Random(); 
+			int flipResult = randFlip.nextInt(2);
+			if (flipResult == 0) {
+				sendMessage(client, "flipped a coin. It landed on heads!");
+				break;
+			}
+			else {
+				sendMessage(client, "flipped a coin. It landed on tails!");
+				break;
+			}
+			
+			
 		}
 	    }
 	}
