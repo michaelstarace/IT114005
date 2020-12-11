@@ -1,6 +1,7 @@
 package server;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -18,6 +19,9 @@ public class Room implements AutoCloseable {
     private final static String JOIN_ROOM = "joinroom";
     private final static String ROLL = "roll";
     private final static String FLIP = "flip";
+    private final static String MUTE = "mute";
+    private final static String UNMUTE = "unmute";
+
 
     public Room(String name) {
 	this.name = name;
@@ -32,6 +36,7 @@ public class Room implements AutoCloseable {
     }
 
     private List<ServerThread> clients = new ArrayList<ServerThread>();
+    HashMap<String,ArrayList<String>> MuteLists = new HashMap<String,ArrayList<String>>();
 
     protected synchronized void addClient(ServerThread client) {
 	client.setCurrentRoom(this);
@@ -130,19 +135,36 @@ public class Room implements AutoCloseable {
 			int rollMax = Integer.parseInt(comm2[1]);
 			int rollResult = randRoll.nextInt(rollMax);
 			String rollResult2 = Integer.toString(rollResult);
-			sendMessage(client, "rolled " + rollResult2);
+			sendMessage(client, "rolled " + rollResult2 + " out of " + rollMax);
+			wasCommand = true;
 			break;
 		case FLIP:
 			Random randFlip = new Random(); 
 			int flipResult = randFlip.nextInt(2);
 			if (flipResult == 0) {
 				sendMessage(client, "flipped a coin. It landed on heads!");
-				break;
 			}
 			else {
 				sendMessage(client, "flipped a coin. It landed on tails!");
-				break;
 			}
+			wasCommand = true;
+			break;
+		case MUTE:
+			boolean CreateMuteList = MuteLists.containsKey(client.getClientName());
+			if (!CreateMuteList) {
+				MuteLists.put(client.getClientName(), new ArrayList<String>());
+			}			
+			MuteLists.get(client.getClientName()).add(comm2[1]);
+			wasCommand = true;
+			break;
+		case UNMUTE:
+			if (MuteLists.containsKey(client.getClientName())) {
+				if(MuteLists.get(client.getClientName()).contains(comm2[1])) {
+					MuteLists.get(client.getClientName()).remove(comm2[1]);
+				}
+			}
+			wasCommand = true;
+			break;
 			
 			
 		}
@@ -153,6 +175,26 @@ public class Room implements AutoCloseable {
 	}
 	return wasCommand;
     }
+    
+    private boolean processPrivateMessage(String message, ServerThread client) {
+    	boolean wasPrivate = false;
+    	try {
+    	    if (message.indexOf("@") == 0) {
+    		String[] comm = message.split("@");
+    		log.log(Level.INFO, message);
+    		String part1 = comm[1];
+    		String[] comm2 = part1.split(" ");
+    		String username = comm2[0];
+    		sendPrivateMessage(client, username, message);
+    		wasPrivate = true;
+    	    }
+    	}
+    	catch (Exception e) {
+    	    e.printStackTrace();
+    	}
+    	return wasPrivate;
+        }
+    
 
     // TODO changed from string to ServerThread
     protected void sendConnectionStatus(ServerThread client, boolean isConnect, String message) {
@@ -181,16 +223,53 @@ public class Room implements AutoCloseable {
 	    // it was a command, don't broadcast
 	    return;
 	}
+	if (processPrivateMessage(message, sender)) {
+	    // it was a private message, don't broadcast
+	    return;
+	}
 	Iterator<ServerThread> iter = clients.iterator();
 	while (iter.hasNext()) {
 	    ServerThread client = iter.next();
-	    boolean messageSent = client.send(sender.getClientName(), message);
-	    if (!messageSent) {
-		iter.remove();
-		log.log(Level.INFO, "Removed client " + client.getId());
+	    if (MuteLists.containsKey(client.getClientName())) {
+	    	if (MuteLists.get(client.getClientName()).contains(sender.getClientName())){
+	    		continue;
+	    	} else {
+	    		boolean messageSent = client.send(sender.getClientName(), message);
+			    if (!messageSent) {
+					iter.remove();
+			    }
+	log.log(Level.INFO, "Removed client " + client.getId());
+	    	}
+	    } else {
+	    	boolean messageSent = client.send(sender.getClientName(), message);
+		    if (!messageSent) {
+				iter.remove();
+		    }
+log.log(Level.INFO, "Removed client " + client.getId());		    
 	    }
 	}
     }
+    
+    protected void sendPrivateMessage(ServerThread sender, String receiver, String message) {
+    	Iterator<ServerThread> iter = clients.iterator();
+    	while (iter.hasNext()) {
+    	    ServerThread client = iter.next();
+    	    if(client.getClientName().equals(receiver) || client.getClientName().equals(sender.getClientName())) {
+    	    	if (MuteLists.containsKey(client.getClientName())) {
+    		    	if (MuteLists.get(client.getClientName()).contains(sender.getClientName())){
+    		    		continue;
+    		    	} else {
+    		    		client.send(sender.getClientName(), message);
+    		    	}
+    	    	} else {
+    	    		client.send(sender.getClientName(), message);
+    	    	}
+    	    	
+    	    }
+    	    // iter.remove();
+    	    }
+    	}
+    
 
     /***
      * Will attempt to migrate any remaining clients to the Lobby room. Will then

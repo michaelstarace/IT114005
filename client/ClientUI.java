@@ -224,12 +224,56 @@ public class ClientUI extends JFrame implements Event {
 	entry.setPreferredSize(d);
 	entry.setMaximumSize(d);
 	textArea.add(entry);
+	
+	
 
 	pack();
 	System.out.println(entry.getSize());
 	JScrollBar sb = ((JScrollPane) textArea.getParent().getParent()).getVerticalScrollBar();
 	sb.setValue(sb.getMaximum());
     }
+    
+    void addBoldMessage(String str) {
+    	JEditorPane entry = new JEditorPane();
+    	entry.setEditable(false);
+    	// entry.setLayout(null);
+    	entry.setText(str);
+    	Dimension d = new Dimension(textArea.getSize().width, calcHeightForText(str));
+    	// attempt to lock all dimensions
+    	entry.setMinimumSize(d);
+    	entry.setPreferredSize(d);
+    	entry.setMaximumSize(d);
+    	entry.setFont(new Font("Serif", Font.BOLD, 12));
+    	textArea.add(entry);
+    	
+    	
+
+    	pack();
+    	System.out.println(entry.getSize());
+    	JScrollBar sb = ((JScrollPane) textArea.getParent().getParent()).getVerticalScrollBar();
+    	sb.setValue(sb.getMaximum());
+        }
+    
+    void addItalicMessage(String str) {
+    	JEditorPane entry = new JEditorPane();
+    	entry.setEditable(false);
+    	// entry.setLayout(null);
+    	entry.setText(str);
+    	Dimension d = new Dimension(textArea.getSize().width, calcHeightForText(str));
+    	// attempt to lock all dimensions
+    	entry.setMinimumSize(d);
+    	entry.setPreferredSize(d);
+    	entry.setMaximumSize(d);
+    	entry.setFont(new Font("Serif", Font.ITALIC, 12));
+    	textArea.add(entry);
+    	
+    	
+
+    	pack();
+    	System.out.println(entry.getSize());
+    	JScrollBar sb = ((JScrollPane) textArea.getParent().getParent()).getVerticalScrollBar();
+    	sb.setValue(sb.getMaximum());
+        }
 
     void next() {
 	card.next(this.getContentPane());
@@ -281,7 +325,18 @@ public class ClientUI extends JFrame implements Event {
     @Override
     public void onMessageReceive(String clientName, String message) {
 	log.log(Level.INFO, String.format("%s: %s", clientName, message));
+	if (message.indexOf("*") == 0) {
+		self.addBoldMessage(String.format("%s: %s", clientName, message));
+	}
+	else if(message.indexOf("~") == 0){
+		self.addItalicMessage(String.format("%s: %s", clientName, message));
+	}
+	else if(message.contains("flipped a coin. It landed on") || message.contains("rolled")) {
+		self.addItalicMessage(String.format("%s %s", clientName, message));
+	}
+	else {
 	self.addMessage(String.format("%s: %s", clientName, message));
+	}
     }
 
     @Override
