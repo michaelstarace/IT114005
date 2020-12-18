@@ -155,6 +155,8 @@ public class Room implements AutoCloseable {
 				MuteLists.put(client.getClientName(), new ArrayList<String>());
 			}			
 			MuteLists.get(client.getClientName()).add(comm2[1]);
+			String muteNotification = client.getClientName() + " has muted you.";
+			sendMuteNotification(client, comm2[1], muteNotification);
 			wasCommand = true;
 			break;
 		case UNMUTE:
@@ -163,6 +165,8 @@ public class Room implements AutoCloseable {
 					MuteLists.get(client.getClientName()).remove(comm2[1]);
 				}
 			}
+			String unmuteNotification = client.getClientName() + " has unmuted you.";
+			sendMuteNotification(client, comm2[1], unmuteNotification);
 			wasCommand = true;
 			break;
 			
@@ -255,6 +259,26 @@ log.log(Level.INFO, "Removed client " + client.getId());
     	while (iter.hasNext()) {
     	    ServerThread client = iter.next();
     	    if(client.getClientName().equals(receiver) || client.getClientName().equals(sender.getClientName())) {
+    	    	if (MuteLists.containsKey(client.getClientName())) {
+    		    	if (MuteLists.get(client.getClientName()).contains(sender.getClientName())){
+    		    		continue;
+    		    	} else {
+    		    		client.send(sender.getClientName(), message);
+    		    	}
+    	    	} else {
+    	    		client.send(sender.getClientName(), message);
+    	    	}
+    	    	
+    	    }
+    	    // iter.remove();
+    	    }
+    	}
+    
+    protected void sendMuteNotification (ServerThread sender, String receiver, String message) {
+    	Iterator<ServerThread> iter = clients.iterator();
+    	while (iter.hasNext()) {
+    	    ServerThread client = iter.next();
+    	    if(client.getClientName().equals(receiver)) {
     	    	if (MuteLists.containsKey(client.getClientName())) {
     		    	if (MuteLists.get(client.getClientName()).contains(sender.getClientName())){
     		    		continue;
