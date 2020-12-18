@@ -2,6 +2,7 @@ package client;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -190,6 +191,29 @@ public class ClientUI extends JFrame implements Event {
 	userPanel.revalidate();
 	userPanel.repaint();
     }
+    
+    void colorClient(User client, String name, String color) {
+    	userPanel.remove(client);
+    	userPanel.revalidate();
+    	userPanel.repaint();
+    	client.removeAll();
+    	User u = new User(name);
+    	Dimension p = new Dimension(userPanel.getSize().width, 30);
+    	u.setPreferredSize(p);
+    	u.setMinimumSize(p);
+    	u.setMaximumSize(p);
+    	if (color == "red") {
+    		client.setForeground(Color.RED);
+    	}
+    	if (color == "blue") {
+    		client.setForeground(Color.BLUE);
+    	}
+    	if (color == "green") {
+    		client.setForeground(Color.GREEN);
+    	}
+    	userPanel.add(u);
+    	users.add(u);
+        }
 
     /***
      * Attempts to calculate the necessary dimensions for a potentially wrapped

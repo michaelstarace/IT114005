@@ -1,5 +1,7 @@
 package client;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -213,5 +215,13 @@ public class SocketClient {
 		e.printStackTrace();
 	    }
 	}
+    }
+    
+    private void CreateChatHistory() throws IOException {
+    	File chatHistory = new File("chatlog.txt");
+    	FileWriter chatWriter = new FileWriter("chatlog.txt");
+    	chatWriter.write(server.getOutputStream().toString());
+    	chatWriter.write(server.getInputStream().toString());
+        chatWriter.close();
     }
 }
